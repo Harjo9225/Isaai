@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modalità Offline | Assistente ISA4</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            color: #333;
+        }
+        
+        h1 { 
+            font-size: 2.5rem; 
+            color: #3a7bd5;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+        
+        .offline-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            color: #f44336;
+        }
+        
+        .tip {
+            background: #e3f2fd;
+            border-left: 4px solid #3a7bd5;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
+            border-radius: 0 12px 12px 0;
+        }
+        
+        ul {
+            text-align: left;
+            margin: 20px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="offline-icon">📶</div>
+        <h1>Sei offline</h1>
+        <p>L'assistente ISA4 richiede una connessione internet per le funzionalità complete.</p>
+        
+        <div class="tip">
+            <strong>Sapevi che:</strong> Puoi insegnare nuove risposte all'assistente anche in modalità offline? 
+            Le risposte verranno sincronizzate automaticamente quando tornerai online.
+        </div>
+        
+        <p>Funzioni ancora disponibili:</p>
+        <ul>
+            <li>Visualizzazione risposte precedentemente salvate</li>
+            <li>Accesso allo storico delle domande</li>
+            <li>Insegnamento di nuove risposte</li>
+        </ul>
+        
+        <p>La connessione verrà ripristinata automaticamente quando disponibile.</p>
+    </div>
+</body>
+</html>
