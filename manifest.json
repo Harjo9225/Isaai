@@ -1,0 +1,25 @@
+{
+    "name": "Assistente ISA4",
+    "short_name": "ISA4",
+    "start_url": "/Isaai/index.html",
+    "scope": "/Isaai/",
+    "display": "standalone",
+    "background_color": "#3a7bd5",
+    "theme_color": "#3a7bd5",
+    "description": "Assistente digitale per gli studenti ISA4 con funzionalità offline",
+    "icons": [
+        {
+            "src": "/Isaai/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/Isaai/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "categories": ["education", "productivity"],
+    "orientation": "portrait"
+}
