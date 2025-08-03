@@ -1,14 +1,12 @@
-const CACHE_NAME = 'isa4-assistant-v4';
+const CACHE_NAME = 'isa4-pwa-v4';
 const OFFLINE_URL = '/Isaai/offline.html';
 const RUNTIME_CACHE = 'runtime-cache-v1';
 
 const urlsToCache = [
     '/Isaai/',
     '/Isaai/index.html',
-    '/Isaai/styles.css',
     '/Isaai/manifest.json',
-    '/Isaai/offline.html',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+    '/Isaai/offline.html'
 ];
 
 self.addEventListener('install', (event) => {
