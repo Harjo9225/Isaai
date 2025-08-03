@@ -3,10 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistente ISA4</title>
+    <title>Assistente ISA4 PWA Corretta</title>
     <link rel="manifest" href="/Isaai/manifest.json">
     <meta name="theme-color" content="#3a7bd5">
-    <link rel="stylesheet" href="/Isaai/styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #3a7bd5, #00d2ff);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        
+        header {
+            text-align: center;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-left: 10px;
+            box-shadow: 0 0 8px currentColor;
+        }
+        
+        .online { background: #4CAF50; }
+        .offline { background: #f44336; }
+        
+        .input-group {
+            display: flex;
+            margin: 20px 0;
+        }
+        
+        input {
+            flex: 1;
+            padding: 14px;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 10px 0 0 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            border-color: #3a7bd5;
+            box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.2);
+        }
+        
+        button {
+            padding: 0 25px;
+            background: #3a7bd5;
+            color: white;
+            border: none;
+            border-radius: 0 10px 10px 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #2f5fb8;
+            transform: translateY(-2px);
+        }
+        
+        .history-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .history-header h2 {
+            color: #2c3e50;
+            font-size: 1.4rem;
+        }
+        
+        .history-header button {
+            background: #f0f4ff;
+            color: #3a7bd5;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .history-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .history-item strong {
+            color: #2c3e50;
+        }
+        
+        .history-item span {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .empty-history {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+        }
+        
+        .response-box {
+            background: #eef5ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            min-height: 100px;
+            border-left: 5px solid #3a7bd5;
+            transition: all 0.5s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .response-box.thinking {
+            background: linear-gradient(90deg, #eef5ff, #e0ebff, #eef5ff);
+            background-size: 200% 200%;
+            animation: gradientPulse 1.5s ease infinite;
+        }
+        
+        @keyframes gradientPulse {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .response-box.show {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .teach-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .teach-section h2 {
+            color: #2c3e50;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+        
+        .teach-section input {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .pwa-section {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .install-button {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(58, 123, 213, 0.4);
+            transition: all 0.3s;
+            display: none;
+        }
+        
+        .install-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(58, 123, 213, 0.6);
+        }
+        
+        .offline-status {
+            text-align: center;
+            background: #fff8e1;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input {
+                border-radius: 10px;
+                margin-bottom: 10px;
+            }
+            
+            button {
+                border-radius: 10px;
+                padding: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -15,24 +276,28 @@
             <p>Fai una domanda o scrivi un comando:</p>
             <div class="input-group">
                 <input id="aiInput" placeholder="Es: scadenza isa4">
-                <button id="sendButton" onclick="handleAI()">Invia</button>
+                <button id="sendButton">Invia</button>
             </div>
         </header>
+        
+        <div class="offline-status" id="offlineStatus">
+            <i class="fas fa-wifi-slash"></i> Sei offline - Funzionalità limitate
+        </div>
         
         <div class="history-section">
             <div class="history-header">
                 <h2>Storico recente</h2>
-                <button onclick="clearHistory()">Cancella storico</button>
+                <button id="clearHistoryBtn">Cancella storico</button>
             </div>
-            <div id="historyContainer"></div>
+            <div id="historyContainer" class="empty-history">Nessuna domanda recente</div>
         </div>
         
-        <div id="aiResponse" class="response-box"></div>
+        <div id="aiResponse" class="response-box">Benvenuto nell'assistente ISA4! Fammi una domanda.</div>
         
         <div class="teach-section">
             <h2>Aggiungi una risposta personalizzata</h2>
             <input id="teachInput" placeholder="Scrivi la risposta...">
-            <button onclick="teachAI()">Salva risposta</button>
+            <button id="teachButton">Salva risposta</button>
         </div>
         
         <div class="pwa-section">
@@ -60,17 +325,31 @@
         const statusIndicator = document.getElementById('statusIndicator');
         const sendButton = document.getElementById('sendButton');
         const installBtn = document.getElementById('installBtn');
+        const offlineStatus = document.getElementById('offlineStatus');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const teachButton = document.getElementById('teachButton');
 
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', () => {
             updateStatusIndicator();
             openDB().then(loadHistory);
             
+            // Registra Service Worker
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/Isaai/sw.js')
                     .then(reg => console.log('Service Worker registrato:', reg.scope))
                     .catch(err => console.error('Errore registrazione SW:', err));
             }
+            
+            // Setup event listeners
+            sendButton.addEventListener('click', handleAI);
+            teachButton.addEventListener('click', teachAI);
+            clearHistoryBtn.addEventListener('click', clearHistory);
+            
+            // Invio con Enter
+            document.getElementById('aiInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleAI();
+            });
         });
 
         // Gestione eventi online/offline
@@ -81,12 +360,14 @@
             onlineStatus = navigator.onLine;
             statusIndicator.className = `status-indicator ${onlineStatus ? 'online' : 'offline'}`;
             statusIndicator.title = onlineStatus ? 'Online' : 'Offline';
+            
+            offlineStatus.style.display = onlineStatus ? 'none' : 'block';
         }
 
         // Gestione database
         function openDB() {
             return new Promise((resolve, reject) => {
-                const req = indexedDB.open("ai-db", 2);
+                const req = indexedDB.open("isa4-db", 3);
                 
                 req.onerror = () => {
                     console.error("Errore DB");
@@ -95,6 +376,7 @@
                 
                 req.onsuccess = () => {
                     db = req.result;
+                    console.log("Database aperto con successo");
                     resolve(db);
                 };
                 
@@ -208,15 +490,20 @@
             try {
                 let answer = null;
                 
+                // Cerca nella cache locale
                 if (aiDataset[q]) {
                     answer = aiDataset[q];
                     await saveToDB(q, answer);
                 } else {
+                    // Cerca nel database locale
                     answer = await getFromDB(q);
                     
+                    // Se online e non trovato, mostra messaggio generico
                     if (!answer && onlineStatus) {
                         answer = `Sto elaborando: "${q}"\n\nSe vuoi, puoi insegnarmi una risposta usando il campo in basso!`;
-                    } else if (!answer) {
+                    } 
+                    // Se offline e non trovato
+                    else if (!answer) {
                         answer = "Offline e senza dati. Insegnami una risposta usando il campo in basso!";
                     }
                 }
