@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente ISA4</title>
+    <link rel="manifest" href="/Isaai/manifest.json">
+    <meta name="theme-color" content="#3a7bd5">
+    <link rel="stylesheet" href="/Isaai/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Assistente ISA4 <span id="statusIndicator" class="status-indicator online"></span></h1>
+            <p>Fai una domanda o scrivi un comando:</p>
+            <div class="input-group">
+                <input id="aiInput" placeholder="Es: scadenza isa4">
+                <button id="sendButton" onclick="handleAI()">Invia</button>
+            </div>
+        </header>
+        
+        <div class="history-section">
+            <div class="history-header">
+                <h2>Storico recente</h2>
+                <button onclick="clearHistory()">Cancella storico</button>
+            </div>
+            <div id="historyContainer"></div>
+        </div>
+        
+        <div id="aiResponse" class="response-box"></div>
+        
+        <div class="teach-section">
+            <h2>Aggiungi una risposta personalizzata</h2>
+            <input id="teachInput" placeholder="Scrivi la risposta...">
+            <button onclick="teachAI()">Salva risposta</button>
+        </div>
+        
+        <div class="pwa-section">
+            <button id="installBtn" class="install-button">
+                <i class="fas fa-download"></i> Installa l'App
+            </button>
+            <p>Installa l'assistente sul tuo dispositivo per usarlo offline</p>
+        </div>
+    </div>
+
+    <script>
+        // Dataset predefinito
+        const aiDataset = {
+            "orari ricevimento": "I docenti ricevono il martedì dalle 14 alle 16.",
+            "scadenza isa4": "Hai tempo fino al 15 settembre per completare ISA4.",
+            "cos'è una pwa": "Una PWA è un'app web che funziona come un'app nativa anche offline.",
+            "contatti": "Puoi scrivere a segreteria@universita.it",
+            "aiuto": "Ecco i comandi disponibili:\n- Orari ricevimento\n- Scadenza ISA4\n- Contatti\n- Appelli esami\nPuoi insegnarmi nuove risposte!",
+            "appelli esami": "Gli appelli sono disponibili sul portale studenti. Il prossimo appello è il 20 giugno."
+        };
+
+        // Variabili globali
+        let db;
+        let onlineStatus = navigator.onLine;
+        const statusIndicator = document.getElementById('statusIndicator');
+        const sendButton = document.getElementById('sendButton');
+        const installBtn = document.getElementById('installBtn');
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatusIndicator();
+            openDB().then(loadHistory);
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/Isaai/sw.js')
+                    .then(reg => console.log('Service Worker registrato:', reg.scope))
+                    .catch(err => console.error('Errore registrazione SW:', err));
+            }
+        });
+
+        // Gestione eventi online/offline
+        window.addEventListener('online', updateStatusIndicator);
+        window.addEventListener('offline', updateStatusIndicator);
+
+        function updateStatusIndicator() {
+            onlineStatus = navigator.onLine;
+            statusIndicator.className = `status-indicator ${onlineStatus ? 'online' : 'offline'}`;
+            statusIndicator.title = onlineStatus ? 'Online' : 'Offline';
+        }
+
+        // Gestione database
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open("ai-db", 2);
+                
+                req.onerror = () => {
+                    console.error("Errore DB");
+                    reject(req.error);
+                };
+                
+                req.onsuccess = () => {
+                    db = req.result;
+                    resolve(db);
+                };
+                
+                req.onupgradeneeded = e => {
+                    db = e.target.result;
+                    
+                    if (!db.objectStoreNames.contains('queries')) {
+                        db.createObjectStore("queries", { keyPath: "question" });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('history')) {
+                        const store = db.createObjectStore("history", { keyPath: "timestamp" });
+                        store.createIndex("by_timestamp", "timestamp", { unique: true });
+                    }
+                };
+            });
+        }
+
+        function saveToDB(q, a) {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve();
+                
+                const tx = db.transaction("queries", "readwrite");
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+                tx.objectStore("queries").put({ question: q, answer: a });
+            });
+        }
+
+        function getFromDB(q) {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve(null);
+                
+                const tx = db.transaction("queries", "readonly");
+                const req = tx.objectStore("queries").get(q);
+                
+                req.onsuccess = () => resolve(req.result ? req.result.answer : null);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function saveToHistory(q, a) {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve();
+                
+                const tx = db.transaction("history", "readwrite");
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+                
+                const historyItem = {
+                    question: q,
+                    answer: a,
+                    timestamp: Date.now()
+                };
+                
+                tx.objectStore("history").put(historyItem);
+            });
+        }
+
+        function getHistory() {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve([]);
+                
+                const tx = db.transaction("history", "readonly");
+                const store = tx.objectStore("history");
+                const index = store.index("by_timestamp");
+                const req = index.openCursor(null, 'prev');
+                const history = [];
+                
+                req.onsuccess = e => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        history.push(cursor.value);
+                        if (history.length < 5) cursor.continue();
+                        else resolve(history);
+                    } else {
+                        resolve(history);
+                    }
+                };
+                
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function clearHistory() {
+            return new Promise((resolve, reject) => {
+                if (!db) return resolve();
+                
+                const tx = db.transaction("history", "readwrite");
+                tx.oncomplete = () => {
+                    loadHistory();
+                    resolve();
+                };
+                tx.onerror = () => reject(tx.error);
+                tx.objectStore("history").clear();
+            });
+        }
+
+        // Funzioni principali
+        async function handleAI() {
+            const q = document.getElementById("aiInput").value.trim().toLowerCase();
+            if (!q) return;
+            
+            document.getElementById("aiInput").value = '';
+            sendButton.disabled = true;
+            
+            const responseEl = document.getElementById("aiResponse");
+            responseEl.textContent = "Sto pensando...";
+            responseEl.classList.add('thinking');
+            
+            try {
+                let answer = null;
+                
+                if (aiDataset[q]) {
+                    answer = aiDataset[q];
+                    await saveToDB(q, answer);
+                } else {
+                    answer = await getFromDB(q);
+                    
+                    if (!answer && onlineStatus) {
+                        answer = `Sto elaborando: "${q}"\n\nSe vuoi, puoi insegnarmi una risposta usando il campo in basso!`;
+                    } else if (!answer) {
+                        answer = "Offline e senza dati. Insegnami una risposta usando il campo in basso!";
+                    }
+                }
+                
+                showAnswer(answer);
+                await saveToHistory(q, answer);
+                loadHistory();
+            } catch (error) {
+                console.error(error);
+                showAnswer("Si è verificato un errore durante l'elaborazione");
+            } finally {
+                responseEl.classList.remove('thinking');
+                sendButton.disabled = false;
+            }
+        }
+
+        async function teachAI() {
+            const q = document.getElementById("aiInput").value.trim().toLowerCase();
+            const a = document.getElementById("teachInput").value.trim();
+            
+            if (!q || !a) {
+                showAnswer("Inserisci sia la domanda che la risposta");
+                return;
+            }
+            
+            try {
+                await saveToDB(q, a);
+                showAnswer(`Risposta per "${q}" salvata con successo!`);
+                document.getElementById("teachInput").value = "";
+            } catch (error) {
+                console.error(error);
+                showAnswer("Errore nel salvataggio della risposta");
+            }
+        }
+
+        function showAnswer(a) {
+            const responseEl = document.getElementById("aiResponse");
+            responseEl.textContent = a;
+            responseEl.classList.add('show');
+            setTimeout(() => responseEl.classList.remove('show'), 10);
+        }
+
+        async function loadHistory() {
+            try {
+                const history = await getHistory();
+                const container = document.getElementById('historyContainer');
+                container.innerHTML = '';
+                
+                if (history.length === 0) {
+                    container.innerHTML = '<div class="empty-history">Nessuna domanda recente</div>';
+                    return;
+                }
+                
+                history.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'history-item';
+                    el.innerHTML = `<strong>${item.question}</strong><span>${item.answer.substring(0, 30)}${item.answer.length > 30 ? '...' : ''}</span>`;
+                    el.onclick = () => {
+                        document.getElementById('aiInput').value = item.question;
+                        showAnswer(item.answer);
+                    };
+                    container.appendChild(el);
+                });
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Installazione PWA
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+        
+        installBtn.addEventListener('click', () => {
+            if (!deferredPrompt) return;
+            
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(choiceResult => {
+                if (choiceResult.outcome === 'accepted') {
+                    installBtn.innerHTML = '<i class="fas fa-check"></i> App Installata!';
+                    installBtn.disabled = true;
+                }
+                deferredPrompt = null;
+            });
+        });
+    </script>
+</body>
+</html>
